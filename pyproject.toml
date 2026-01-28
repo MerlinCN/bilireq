@@ -2,7 +2,7 @@
 authors = [
     {name = "SK-415", email = "2967923486@qq.com"},
 ]
-requires-python = ">=3.8,<4.0"
+requires-python = ">=3.12,<4.0"
 dependencies = [
     "httpx",
     "pycryptodome>=3.19.0",

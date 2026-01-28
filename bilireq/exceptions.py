@@ -1,7 +1,10 @@
+from typing import Any, Optional
+
+
 class ResponseCodeError(Exception):
     """请求返回 code 不为 0"""
 
-    def __init__(self, code: int, msg: str, data: dict):
+    def __init__(self, code: int, msg: str, data: Optional[dict[str, Any]] = None):
         self.code = code
         self.msg = msg
         self.data = data

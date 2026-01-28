@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional, Union, Tuple
 from urllib.parse import urlencode
 
 from httpx import AsyncClient, Response
-from httpx._types import HeaderTypes, ProxyTypes, URLTypes
+from httpx._types import HeaderTypes, URLTypes
 
 from .._typing import T_Auth
 from ..auth import Auth, WebAuth
@@ -24,9 +24,14 @@ homepage_cookies: Dict[str, str] = {}
 _salt = None
 
 
-async def get_homepage_cookies(proxies=None):
+async def get_homepage_cookies(proxy: Optional[str] = None):
+    """获取B站首页 cookies。
+
+    Args:
+        proxy: 代理地址，如 "http://127.0.0.1:7890"
+    """
     if not homepage_cookies:
-        async with AsyncClient(proxies=proxies) as client:
+        async with AsyncClient(proxy=proxy) as client:
             headers = {
                 "User-Agent": DEFAULT_HEADERS["User-Agent"],
             }
@@ -51,10 +56,8 @@ def _encrypt_params(params: Dict[str, Any], local_id: int = 0) -> Dict[str, Any]
     return params
 
 
-async def _get_salt(*, proxies=None):
-    if proxies is None:
-        proxies = {"all://": None}
-    async with AsyncClient(proxies=proxies, verify=False) as client:
+async def _get_salt(*, proxy: Optional[str] = None):
+    async with AsyncClient(proxy=proxy, verify=False) as client:
         url = "https://api.bilibili.com/x/web-interface/nav"
         req = await client.request("GET", url, headers=DEFAULT_HEADERS)
     con = req.json()
@@ -117,12 +120,10 @@ async def _request(
     auth: T_Auth = None,
     reqtype: str = "app",
     is_wbi: bool = False,
-    headers: HeaderTypes = None,
-    proxies: ProxyTypes = None,
+    headers: Optional[HeaderTypes] = None,
+    proxy: Optional[str] = None,
     **kwargs,
 ) -> Response:
-    if proxies is None:
-        proxies = {"all://": None}
     if headers is None:
         headers = DEFAULT_HEADERS
     if params is None:
@@ -136,10 +137,10 @@ async def _request(
     else:
         auth = WebAuth(auth)
         cookies.update(auth.cookies)
-    cookies.update(await get_homepage_cookies(proxies))
+    cookies.update(await get_homepage_cookies(proxy))
     if is_wbi:
         await _sign_params(params)
-    async with AsyncClient(proxies=proxies) as client:
+    async with AsyncClient(proxy=proxy) as client:
         resp = await client.request(
             method, url, headers=headers, params=params, cookies=cookies, **kwargs
         )
